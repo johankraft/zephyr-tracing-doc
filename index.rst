@@ -105,11 +105,11 @@ Zephyr includes support for `Percepio Tracealyzer`_ that offers trace visualizat
     :figclass: align-center
     :width: 80%
 
-Zephyr kernel events are captured automatically when Tracealyzer tracing is enabled. Tracealyzer also provides advanced application logging support, where you call the Tracealyzer tracing library from your application code. This lets you see both kernel and application events together and you may also visualize the application logging in several ways, for example as data plots and state diagrams. Learn more in the Tracealyzer User Manual provided with the application.
+Zephyr kernel events are captured automatically when Tracealyzer tracing is enabled. Tracealyzer also provides extensive support for application logging, where you call the Tracealyzer tracing library from your application code. This lets you visualize kernel events and application events together, for example as data plots or state diagrams on logged variables. Learn more in the Tracealyzer User Manual provided with the application.
 
-TraceRecorder Stream Ports
---------------------------
-The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by adding the following configuration options in your prj.cfg::
+Percepio TraceRecorder and Stream Ports
+---------------------------------------
+The tracing library for Tracealyzer (TraceRecorder) is included in the Zephyr manifest and provided under the same license (Apache 2.0). This is enabled by adding the following configuration options in your prj.cfg::
 
     CONFIG_TRACING=y
     CONFIG_PERCEPIO_TRACERECORDER=y
@@ -142,7 +142,7 @@ The stream port modules have individual configuration options. You can review th
 Snapshot Tracing (Ring Buffer)
 ------------------------------
 
-The "Ring Buffer" stream port is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This is used to dump "snapshots" of the trace data, typically using the debugger. Unless you have lots or RAM, this only allows for short traces. This is not suitable for profiling but quite useful for debugging in combination with breakpoints. For example, if you set a breakpoint in an error handler, a snapshot trace can show the sequence of events leading up to the error.
+The "Ring Buffer" stream port keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This is used to dump "snapshots" of the trace data, typically using the debugger. TYpically this only allows for short traces, unless you have megabytes of RAM. This is therefore not suitable for profiling, but is quite useful for debugging in combination with breakpoints. For example, if you set a breakpoint in an error handler, a snapshot trace can show the sequence of events leading up to the error. Snapshot tracing is also easy to begin with since it doesn't depend on any particular debug probe or development tool.
 
 To use the Ring Buffer option, make sure to have the following configuration options in your prj.cnf::
 
