@@ -109,14 +109,24 @@ Zephyr kernel events are captured automatically when Tracealyzer tracing is enab
 
 TraceRecorder Stream Ports
 --------------------------
-The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by configuration options, as described below. The most important configuration is to select the right "stream port", a TraceRecoder module that defines how to output the trace data. As of July 2024, the following stream ports are available in the Zephyr configuration system:
+The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by the following configuration options in your prj.cfg::
+
+    CONFIG_TRACING=y
+    CONFIG_PERCEPIO_TRACERECORDER=y
+
+Or using menuconfig:
+
+* Subsystems and OS Services -> Tracing Support: Enabled
+* Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
+
+A few additional settings are needed to configure TraceRecorder. The most important configuration is to select the right "stream port". This specified how to output the trace data. As of July 2024, the following stream ports are available in the Zephyr configuration system:
 
 * RTT: Trace streaming via Segger RTT on J-Link debug probes.
 * ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
 * Ring Buffer: The trace data is kept in a circular RAM buffer.
 * Semihost: For tracing on QEMU. Streams the trace data to a host file.
 
-The stream ports are simply headers file containin a few macros that define what functions to call to output the trace data stream and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport. Tracealyzer can receive such trace streams over various interfaces, including files, sockets, COM ports, named pipes and more. Additional stream port modules are available in the TraceRecorder repo (e.g. lwIP), although they might require modifications to work with Zephyr.
+The stream ports are small modules within TraceRecorder that define what functions to call to output the trace data and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport and Tracealyzer can receive trace streams over various interfaces, including files, sockets, COM ports, named pipes and more. Note that additional stream port modules are available in the TraceRecorder repo (e.g. lwIP), although they might require modifications to work with Zephyr.
 
 Ring Buffer for Snapshot Tracing
 --------------------------------
