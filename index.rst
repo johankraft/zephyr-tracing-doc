@@ -95,7 +95,7 @@ backends both in synchronous and asynchronous modes.
 Percepio Tracealyzer Support
 =========================
 
-Zephyr includes support for `Percepio Tracealyzer`_ for trace streaming over various interfaces, as well as snapshot tracing where the events are kept in a RAM buffer. 
+Zephyr includes support for `Percepio Tracealyzer`_ that offers trace visualization for simplified analysis, report generation and other analysis features. Tracealyzer allows for trace streaming over various interfaces and also snapshot tracing, where the events are kept in a RAM buffer. 
 
 .. _Percepio Tracealyzer: https://percepio.com/tracealyzer
 
@@ -105,7 +105,7 @@ Zephyr includes support for `Percepio Tracealyzer`_ for trace streaming over var
     :figclass: align-center
     :width: 80%
 
-Zephyr kernel events are captured automatically when Tracealyzer tracing is enabled. Tracealyzer also provides advanced application logging support, where you call the Tracealyzer tracing library from your application code. This lets you see both kernel and application events together and you may also visualize the application logging in several ways, for example as data plots and state diagrams. Learn in the Tracealyzer User Manual, provided with the application.
+Zephyr kernel events are captured automatically when Tracealyzer tracing is enabled. Tracealyzer also provides advanced application logging support, where you call the Tracealyzer tracing library from your application code. This lets you see both kernel and application events together and you may also visualize the application logging in several ways, for example as data plots and state diagrams. Learn more in the Tracealyzer User Manual provided with the application.
 
 TraceRecorder Stream Ports
 --------------------------
@@ -160,7 +160,7 @@ Or if using menuconfig:
 
 The default buffer size is 10240 bytes. This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig, see Subsystems and OS Services -> Tracing Support -> Tracing Configuration. 
 
-To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command:
+To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command::
 
     dump binary value trace.psfs *RecorderDataPtr
 
