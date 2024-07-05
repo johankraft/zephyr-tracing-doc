@@ -7,7 +7,7 @@ Overview
 ********
 
 The tracing feature provides hooks that permits you to collect data from
-your application and allows tools running on a host to visualize the inner-working of
+your application and allows :ref:`tools` running on a host to visualize the inner-working of
 the kernel and various subsystems.
 
 Every system has application-specific events to trace out.  Historically,
@@ -92,8 +92,13 @@ The CTF top layer is enabled using the configuration option
 :kconfig:option:`CONFIG_TRACING_CTF` and can be used with the different transport
 backends both in synchronous and asynchronous modes.
 
+.. _tools:
+
+Tracing Tools
+*************
+
 Percepio Tracealyzer Support
-=========================
+============================
 
 Zephyr includes support for `Percepio Tracealyzer`_ that offers trace visualization for simplified analysis, report generation and other analysis features. Tracealyzer allows for trace streaming over various interfaces and also snapshot tracing, where the events are kept in a RAM buffer. 
 
