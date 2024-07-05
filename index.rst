@@ -192,7 +192,7 @@ Learn more about RTT streaming in the Tracealyzer User Manual. See Creating and 
 Arm Cortex-M ITM Streaming (ITM)
 --------------------------------
 
-This stream port is for Arm Cortex-M devices featuring the ITM unit. It is recommended to use a fast debug probe that allows for SWO speed of 10 MHz or higher, or a probe with instruction trace (ETM) support. The main setting for the ITM stream port is the ITM port (0-31). A dedicated channel is needed for Tracealyzer and port 0 is usually reserved for printf-style logging, so channel 1 is used by default. 
+This stream port is for Arm Cortex-M devices featuring the ITM unit. It is recommended to use a fast debug probe that allows for SWO speeds of 10 MHz or higher. The main setting for the ITM stream port is the ITM port (0-31). A dedicated channel is needed for Tracealyzer and port 0 is usually reserved for printf-style logging, so channel 1 is used by default. 
 
 The option "Use internal buffer" should typically remain disabled. It buffers the data in RAM before transmission and defers the data transmission to the periodic TzCtrl thread. 
 
