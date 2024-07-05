@@ -109,7 +109,7 @@ Zephyr kernel events are captured automatically when Tracealyzer tracing is enab
 
 TraceRecorder Stream Ports
 --------------------------
-The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by the following configuration options in your prj.cfg::
+The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by adding the following configuration options in your prj.cfg::
 
     CONFIG_TRACING=y
     CONFIG_PERCEPIO_TRACERECORDER=y
@@ -119,19 +119,28 @@ Or using menuconfig:
 * Subsystems and OS Services -> Tracing Support: Enabled
 * Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
 
-A few additional settings are needed to configure TraceRecorder. The most important configuration is to select the right "stream port". This specified how to output the trace data. As of July 2024, the following stream ports are available in the Zephyr configuration system:
+Some additional settings are needed to configure TraceRecorder. The most important configuration is to select the right "stream port". This specifies how to output the trace data. As of July 2024, the following stream ports are available in the Zephyr configuration system:
 
+* Ring Buffer: The trace data is kept in a circular RAM buffer.
 * RTT: Trace streaming via Segger RTT on J-Link debug probes.
 * ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
-* Ring Buffer: The trace data is kept in a circular RAM buffer.
 * Semihost: For tracing on QEMU. Streams the trace data to a host file.
 
-The stream ports are small modules within TraceRecorder that define what functions to call to output the trace data and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport and Tracealyzer can receive trace streams over various interfaces, including files, sockets, COM ports, named pipes and more. Note that additional stream port modules are available in the TraceRecorder repo (e.g. lwIP), although they might require modifications to work with Zephyr.
+The stream port setting is found under Modules -> percepio -> TraceRecorder -> Stream Port, or you can add one of the following options in your prj.cfg.::
 
-Ring Buffer for Snapshot Tracing
---------------------------------
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER=y
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT=y
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ITM=y
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST=y
 
-The "Ring Buffer" stream port is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This can be dumped via the debugger to see the traced events, e.g. the events leading up to a breakpoint. 
+Make sure to only include ONE of these configuration options. 
+
+Each of the stream port modules have different configuration options. You can review them in menuconfig under Modules -> percepio -> TraceRecorder -> RTT Config / ITM Config / Ring Buffer Config / Semihost Config. The most important stream port options are described below.
+
+Snapshot Tracing (Ring Buffer)
+------------------------------
+
+The "Ring Buffer" stream port is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This is used to dump "snapshots" of the trace data, typically using the debugger. Unless you have lots or RAM, this only allows for short traces. But it is easy to set up and can be used together with breakpoints for debugging. For example, if you set a breakpoint in an error handler, a snapshot trace can show the sequence of events leading up to the error.
 
 To use the Ring Buffer option, make sure to have the following configuration options in your prj.cnf::
 
@@ -149,52 +158,47 @@ Or if using menuconfig:
 * ... TraceRecorder -> Stream Port: Ring Buffer
 * ... TraceRecorder -> Ring Buffer Config -> Buffer Size: <size in bytes>
 
-The default buffer size is 10240 bytes. This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig these settings are found under Subsystems and OS Services -> Tracing Support -> Tracing Configuration. In particular, the Syscalls (TRACING_SYSCALL=y) tend to generate a large number of events. Consider excluding syscall events (TRACING_SYSCALL=n) if not important for your analysis. 
+The default buffer size is 10240 bytes. This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig, see Subsystems and OS Services -> Tracing Support -> Tracing Configuration. 
 
-Saving and Viewing a Ring-Buffer Snapshot
------------------------------------------
 To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command:
 
     dump binary value trace.psfs *RecorderDataPtr
 
 The resulting file is typically found in the root of the build folder, unless a different path is specified. Open this file in Tracealyzer by selecting File -> Open -> Open File. 
 
-Start Mode
-----------
-The "Start Mode" option decides when the tracing starts. By using the option "Start", the tracing begins directly at startup, once the TraceRecorder library has been initialized. This is recommended when using the Ring Buffer and Semihost. For streaming via RTT or ITM you may also use "Start From Host" or "Start Await Host". Both  listens for start (and stop) commands from the Tracealyzer application. The latter option, "Start Await Host", causes the TraceRecorder initialization to block until the start command is received from the Tracealyzer application.
-
-Continuous Trace Streaming
+SEGGER RTT Streaming (RTT)
 --------------------------
 
-The following "stream port" settings allows for streaming the data continuously to host, thereby allowing for record long traces::
+To stream the trace data to Tracealyzer via a SEGGER J-Link probe using the RTT interface, make sure to have the following configuration options in your prj.cnf::
 
-    RTT: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT
-    ITM: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ITM
-    Semihost: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST
+    CONFIG_TRACING=y
+    CONFIG_PERCEPIO_TRACERECORDER=y
+    CONFIG_PERCEPIO_TRC_START_MODE_START=y  
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT=y
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE=<size in bytes> (default 5000 bytes)
 
-In menuconfig you find the stream port setting under Modules -> percepio -> TraceRecorder -> Stream Port.
+Or if using menuconfig:
 
-Each of the stream port modules have different configuration options. You can see them in menuconfig under Modules -> percepio -> TraceRecorder -> RTT Config / ITM Config / Ring Buffer Config / Semihost Config. 
+* Subsystems and OS Services -> Tracing Support: Enabled
+* Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
+* Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start   
+* ... TraceRecorder -> Stream Port: RTT
+* ... TraceRecorder -> RTT Config -> RTT buffer size up: <size in bytes>
 
-Learn more about J-Link RTT and ITM streaming in the `Tracealyzer Getting Started Guides`_.
+The setting "RTT buffer size up" sets the size of the RTT transmission buffer. This is important for throughput. By default this buffer is quite large, 5000 bytes, to give decent performance also on onboard J-Link debuggers (they are not as fast as the stand-alone probes). If you are tight on RAM, you may consider reducing this setting. If using a regular J-Link probe it is often sufficient with a much smaller buffer, e.g. 1 KB or less.
 
-.. _Tracealyzer Getting Started Guides: https://percepio.com/tracealyzer/gettingstarted/
+Learn more about RTT streaming in the Tracealyzer User Manual. See Creating and Loading Traces -> Percepio TraceRecorder -> Using TraceRecorder v4.6 or later -> Stream ports (or search for RTT).
 
-RTT Configuration Options
--------------------------
+Arm Cortex-M ITM Streaming (ITM)
+--------------------------------
 
-If using RTT for J-Link tracing, an important setting is "RTT buffer size up" (CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE). This is the size of the RTT transmission buffer, which is important for throughput. By default this is quite large, 5000 bytes, to give decent performance on slower "onboard" J-Link interfaces. If you are tight on RAM, you may consider reducing this setting. If using a regular J-Link probe it is often sufficient with a much smaller buffer, e.g. 1 KB or less.
-
-Learn more about RTT streaming in the Tracealyzer User Manual.
-
-ITM Configuration Options
--------------------------
-
-To use ITM for tracing, it is recommended to use a fast debug probe, allowing for SWO speed of 10 MHz or higher. The main  setting for the ITM stream port is the ITM port (0-31). Port 0 is usually reserved for printf-style logging. A dedicated channel is needed for Tracealyzer. By default, channel 1 is used. 
+This stream port is for Arm Cortex-M devices featuring the ITM unit. It is recommended to use a fast debug probe that allows for SWO speed of 10 MHz or higher, or a probe with instruction trace (ETM) support. The main setting for the ITM stream port is the ITM port (0-31). A dedicated channel is needed for Tracealyzer and port 0 is usually reserved for printf-style logging, so channel 1 is used by default. 
 
 The option "Use internal buffer" should typically remain disabled. It buffers the data in RAM before transmission and defers the data transmission to the periodic TzCtrl thread. 
 
-QEMU Trace Streaming (Semihost)
+Learn more about ITM streaming in the Tracealyzer User Manual. See Creating and Loading Traces -> Percepio TraceRecorder -> Using TraceRecorder v4.6 or later -> Stream ports (or search for ITM).
+
+QEMU Streaming (Semihost)
 -------------------------------
 
 To enable Tracealyzer tracing support in QEMU, you need to apply the following configuration options::
@@ -214,6 +218,16 @@ Using menuconfig
     Modules -> percepio -> TraceRecorder -> Stream Port: Semihost    
 
 By default, the resulting trace file is found in "./trace.psf" in the root of the build folder, unless a different path is specified. Open this file in Tracealyzer by selecting File -> Open -> Open File.
+
+.. _Tracealyzer Getting Started Guides: https://percepio.com/tracealyzer/gettingstarted/
+
+Start Mode
+----------
+The "Start Mode" option decides when the tracing starts. By using the option "Start", the tracing begins directly at startup, once the TraceRecorder library has been initialized. This is recommended when using the Ring Buffer and Semihost. For streaming via RTT or ITM you may also use "Start From Host" or "Start Await Host". Both  listens for start (and stop) commands from the Tracealyzer application. The latter option, "Start Await Host", causes the TraceRecorder initialization to block until the start command is received from the Tracealyzer application.
+
+Custom Stream Ports
+-------------------
+The stream ports are small modules within TraceRecorder that define what functions to call to output the trace data and (optionally) how to read start/stop commands from Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport and Tracealyzer can receive trace streams over various interfaces, including files, sockets, COM ports, named pipes and more. Note that additional stream port modules are available in the TraceRecorder repo (e.g. lwIP), although they might require modifications to work with Zephyr.
 
 
 SEGGER SystemView Support
