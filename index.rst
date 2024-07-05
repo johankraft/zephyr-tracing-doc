@@ -147,7 +147,7 @@ The stream port modules have individual configuration options. You can review th
 Snapshot Tracing (Ring Buffer)
 ------------------------------
 
-The "Ring Buffer" stream port keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This is used to dump "snapshots" of the trace data, typically using the debugger. TYpically this only allows for short traces, unless you have megabytes of RAM. This is therefore not suitable for profiling, but is quite useful for debugging in combination with breakpoints. For example, if you set a breakpoint in an error handler, a snapshot trace can show the sequence of events leading up to the error. Snapshot tracing is also easy to begin with since it doesn't depend on any particular debug probe or development tool.
+The "Ring Buffer" stream port keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This is used to dump "snapshots" of the trace data, typically using the debugger. Typically this only allows for short traces, unless you have megabytes of RAM. This is therefore not suitable for profiling, but is quite useful for debugging in combination with breakpoints. For example, if you set a breakpoint in an error handler, a snapshot trace can show the sequence of events leading up to the error. Snapshot tracing is also easy to begin with since it doesn't depend on any particular debug probe or development tool.
 
 To use the Ring Buffer option, make sure to have the following configuration options in your prj.cnf::
 
