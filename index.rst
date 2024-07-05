@@ -126,7 +126,9 @@ Some additional settings are needed to configure TraceRecorder. The most importa
 * ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
 * Semihost: For tracing on QEMU. Streams the trace data to a host file.
 
-The stream port setting is found under Modules -> percepio -> TraceRecorder -> Stream Port, or you can add one of the following options in your prj.cfg.::
+The stream port setting is found under Modules -> percepio -> TraceRecorder -> Stream Port.
+
+Or simply add one of the following options in your prj.cfg::
 
     CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER=y
     CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT=y
@@ -135,7 +137,7 @@ The stream port setting is found under Modules -> percepio -> TraceRecorder -> S
 
 Make sure to only include ONE of these configuration options. 
 
-Each of the stream port modules have different configuration options. You can review them in menuconfig under Modules -> percepio -> TraceRecorder -> RTT Config / ITM Config / Ring Buffer Config / Semihost Config. The most important stream port options are described below.
+The stream port modules have individual configuration options. You can review them in menuconfig under Modules -> percepio -> TraceRecorder -> RTT Config / ITM Config / Ring Buffer Config / Semihost Config. The most important options for each stream port are described below.
 
 Snapshot Tracing (Ring Buffer)
 ------------------------------
@@ -148,8 +150,8 @@ To use the Ring Buffer option, make sure to have the following configuration opt
     CONFIG_PERCEPIO_TRACERECORDER=y
     CONFIG_PERCEPIO_TRC_START_MODE_START=y  
     CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER=y
-    config_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER_SIZE=<size in bytes> (default 10 KB)
-
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER_SIZE=<size in bytes>
+    
 Or if using menuconfig:
 
 * Subsystems and OS Services -> Tracing Support: Enabled
@@ -158,7 +160,7 @@ Or if using menuconfig:
 * ... TraceRecorder -> Stream Port: Ring Buffer
 * ... TraceRecorder -> Ring Buffer Config -> Buffer Size: <size in bytes>
 
-The default buffer size is 10240 bytes. This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig, see Subsystems and OS Services -> Tracing Support -> Tracing Configuration. 
+The default buffer size is 10240 bytes (10 KB). This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig, see Subsystems and OS Services -> Tracing Support -> Tracing Configuration. 
 
 To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command::
 
@@ -169,19 +171,19 @@ The resulting file is typically found in the root of the build folder, unless a 
 SEGGER RTT Streaming (RTT)
 --------------------------
 
-To stream the trace data to Tracealyzer via a SEGGER J-Link probe using the RTT interface, make sure to have the following configuration options in your prj.cnf::
+Tracealyzer has built-in support for SEGGER RTT to receive traces via a J-Link probe. This allows for recording very long traces. To configure Zephyr for RTT streaming to Tracealyzer, add the following configuration options in your prj.cnf::
 
     CONFIG_TRACING=y
     CONFIG_PERCEPIO_TRACERECORDER=y
-    CONFIG_PERCEPIO_TRC_START_MODE_START=y  
+    CONFIG_PERCEPIO_TRC_START_MODE_START_FROM_HOST=y  
     CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT=y
-    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE=<size in bytes> (default 5000 bytes)
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE=<size in bytes>
 
 Or if using menuconfig:
 
 * Subsystems and OS Services -> Tracing Support: Enabled
 * Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
-* Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start   
+* Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start From Host   
 * ... TraceRecorder -> Stream Port: RTT
 * ... TraceRecorder -> RTT Config -> RTT buffer size up: <size in bytes>
 
@@ -192,16 +194,32 @@ Learn more about RTT streaming in the Tracealyzer User Manual. See Creating and 
 Arm Cortex-M ITM Streaming (ITM)
 --------------------------------
 
-This stream port is for Arm Cortex-M devices featuring the ITM unit. It is recommended to use a fast debug probe that allows for SWO speeds of 10 MHz or higher. The main setting for the ITM stream port is the ITM port (0-31). A dedicated channel is needed for Tracealyzer and port 0 is usually reserved for printf-style logging, so channel 1 is used by default. 
+This stream port is for Arm Cortex-M devices featuring the ITM unit. It is recommended to use a fast debug probe that allows for SWO speeds of 10 MHz or higher. To use this stream port, apply the following configuration options::
+
+    CONFIG_TRACING=y
+    CONFIG_PERCEPIO_TRACERECORDER=y
+    CONFIG_PERCEPIO_TRC_START_MODE_START=y  
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ITM=y
+    CONFIG_PERCEPIO_TRC_CFG_ITM_PORT=1
+
+Or if using menuconfig:
+
+* Subsystems and OS Services -> Tracing Support: Enabled
+* Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
+* Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start   
+* ... TraceRecorder -> Stream Port: ITM
+* ... TraceRecorder -> ITM Config -> ITM Port: 1
+
+The main setting for the ITM stream port is the ITM port (0-31). A dedicated channel is needed for Tracealyzer and port 0 is usually reserved for printf-style logging, so channel 1 is used by default. 
 
 The option "Use internal buffer" should typically remain disabled. It buffers the data in RAM before transmission and defers the data transmission to the periodic TzCtrl thread. 
 
-Learn more about ITM streaming in the Tracealyzer User Manual. See Creating and Loading Traces -> Percepio TraceRecorder -> Using TraceRecorder v4.6 or later -> Stream ports (or search for ITM).
+The host-side setup depends on what debug probe you are using. Learn more in the Tracealyzer User Manual. See Creating and Loading Traces -> Percepio TraceRecorder -> Using TraceRecorder v4.6 or later -> Stream ports (or search for ITM).
 
 QEMU Streaming (Semihost)
 -------------------------------
 
-To enable Tracealyzer tracing support in QEMU, you need to apply the following configuration options::
+This stream port allows for Tracealyzer tracing on Zephyr in QEMU. The data is streamed to a host file using QEMU semihosting. To use this option, apply the following configuration options::
 
     CONFIG_SEMIHOST=y    
     CONFIG_TRACING=y
@@ -221,9 +239,9 @@ By default, the resulting trace file is found in "./trace.psf" in the root of th
 
 .. _Tracealyzer Getting Started Guides: https://percepio.com/tracealyzer/gettingstarted/
 
-Start Mode
+Recorder Start Mode
 ----------
-The "Start Mode" option decides when the tracing starts. By using the option "Start", the tracing begins directly at startup, once the TraceRecorder library has been initialized. This is recommended when using the Ring Buffer and Semihost. For streaming via RTT or ITM you may also use "Start From Host" or "Start Await Host". Both  listens for start (and stop) commands from the Tracealyzer application. The latter option, "Start Await Host", causes the TraceRecorder initialization to block until the start command is received from the Tracealyzer application.
+You may have noticed the "Recorder Start Mode" option in the examples above. This decides when the tracing starts. By using the suggested option "Start", the tracing begins directly at startup, once the TraceRecorder library has been initialized. This is recommended when using the Ring Buffer and Semihost. For streaming via RTT or ITM you may also use "Start From Host" or "Start Await Host". Both  listens for start (and stop) commands from the Tracealyzer application. The latter option, "Start Await Host", causes the TraceRecorder initialization to block until the start command is received from the Tracealyzer application.
 
 Custom Stream Ports
 -------------------
