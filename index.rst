@@ -92,6 +92,12 @@ The CTF top layer is enabled using the configuration option
 :kconfig:option:`CONFIG_TRACING_CTF` and can be used with the different transport
 backends both in synchronous and asynchronous modes.
 
+Percepio Tracealyzer Support
+=========================
+
+Zephyr includes support for `Percepio Tracealyzer`_ via the TraceRecorder library, supporting both snapshots and trace streaming over several interfaces. 
+
+.. _Percepio Tracealyzer: https://percepio.com/tracealyzer
 
 SEGGER SystemView Support
 =========================
