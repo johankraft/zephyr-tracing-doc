@@ -95,9 +95,110 @@ backends both in synchronous and asynchronous modes.
 Percepio Tracealyzer Support
 =========================
 
-Zephyr includes support for `Percepio Tracealyzer`_ via the TraceRecorder library, supporting both snapshots and trace streaming over several interfaces. 
+Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace streaming over various interfaces. Apart from Zephyr kernel tracing, Tracealyzer also provides several features for application-level logging, used by calling the TraceRecorder APIs directly. This includes support for data plots, intervals and state diagrams, as described in the Tracealyzer User Manual provided with the application. 
 
 .. _Percepio Tracealyzer: https://percepio.com/tracealyzer
+
+.. figure:: percepio_tracealyzer.png
+    :align: center
+    :alt: Percepio Tracealyzer
+    :figclass: align-center
+    :width: 80%
+
+As of July 2024, the following "stream port" options are available in the Zephyr configuration system:
+
+* RTT: Trace streaming via Segger RTT on J-Link debug probes.
+* ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
+* Ring Buffer: The trace data is kept in a circular RAM buffer.
+* Semihost: For tracing on QEMU. Streams the trace data to a host file.
+
+Ring Buffer - Snapshot Tracing
+------------------------------
+
+The "Ring Buffer" option is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This can be dumped via the debugger to see the traced events, e.g. the events leading up to a breakpoint. 
+
+To use the Ring Buffer option, make sure to have the following configuration options in your prj.cnf::
+
+    CONFIG_TRACING=y
+    CONFIG_PERCEPIO_TRACERECORDER=y
+    CONFIG_PERCEPIO_TRC_START_MODE_START=y  
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER=y
+    config_PERCEPIO_TRC_CFG_STREAM_PORT_RINGBUFFER_SIZE=<size in bytes> (default 10 KB)
+
+Or if using menuconfig:
+
+* Subsystems and OS Services -> Tracing Support: Enabled
+* Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
+* Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start   
+* ... TraceRecorder -> Stream Port: Ring Buffer
+* ... TraceRecorder -> Ring Buffer Config -> Buffer Size: <size in bytes>
+
+The default buffer size is 10240 bytes. This can be reduced if you are tight on RAM, or increased if you have RAM to spare and want longer traces. You may also optimize the Tracing Configuration settings to get longer traces by filtering out less important events. In menuconfig these settings are found under Subsystems and OS Services -> Tracing Support -> Tracing Configuration. In particular, the Syscalls (TRACING_SYSCALL=y) tend to generate a large number of events. Consider excluding syscall events (TRACING_SYSCALL=n) if not important for your analysis. 
+
+Saving and Viewing a Ring-Buffer Snapshot
+-----------------------------------------
+To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command:
+
+    dump binary value trace.psfs *RecorderDataPtr
+
+The resulting file is typically found in the root of the build folder, unless a different path is specified. Open this file in Tracealyzer by selecting File -> Open -> Open File. 
+
+Start Mode
+----------
+The "Start Mode" option decides when the tracing starts. By using the option "Start", the tracing begins directly at startup, once the TraceRecorder library has been initialized. This is recommended when using the Ring Buffer and Semihost. For streaming via RTT or ITM you may also use "Start From Host" or "Start Await Host". Both  listens for start (and stop) commands from the Tracealyzer application. The latter option, "Start Await Host", causes the TraceRecorder initialization to block until the start command is received from the Tracealyzer application.
+
+Continuous Trace Streaming
+--------------------------
+
+The following "stream port" settings allows for streaming the data continuously to host, thereby allowing for record long traces::
+
+    RTT: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT
+    ITM: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ITM
+    Semihost: CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST
+
+In menuconfig you find the stream port setting under Modules -> percepio -> TraceRecorder -> Stream Port.
+
+Each of the stream port modules have different configuration options. You can see them in menuconfig under Modules -> percepio -> TraceRecorder -> RTT Config / ITM Config / Ring Buffer Config / Semihost Config. 
+
+Learn more about J-Link RTT and ITM streaming in the `Tracealyzer Getting Started Guides`_.
+
+.. _Tracealyzer Getting Started Guides: https://percepio.com/tracealyzer/gettingstarted/
+
+RTT Configuration Options
+-------------------------
+
+If using RTT for J-Link tracing, an important setting is "RTT buffer size up" (CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE). This is the size of the RTT transmission buffer, which is important for throughput. By default this is quite large, 5000 bytes, to give decent performance on slower "onboard" J-Link interfaces. If you are tight on RAM, you may consider reducing this setting. If using a regular J-Link probe it is often sufficient with a much smaller buffer, e.g. 1 KB or less.
+
+Learn more about RTT streaming in the Tracealyzer User Manual.
+
+ITM Configuration Options
+-------------------------
+
+To use ITM for tracing, it is recommended to use a fast debug probe, allowing for SWO speed of 10 MHz or higher. The main  setting for the ITM stream port is the ITM port (0-31). Port 0 is usually reserved for printf-style logging. A dedicated channel is needed for Tracealyzer. By default, channel 1 is used. 
+
+The option "Use internal buffer" should typically remain disabled. It buffers the data in RAM before transmission and defers the data transmission to the periodic TzCtrl thread. 
+
+QEMU Trace Streaming (Semihost)
+-------------------------------
+
+To enable Tracealyzer tracing support in QEMU, you need to apply the following configuration options::
+
+    CONFIG_SEMIHOST=y    
+    CONFIG_TRACING=y
+    CONFIG_PERCEPIO_TRACERECORDER=y
+    CONFIG_PERCEPIO_TRC_START_MODE_START=y  
+    CONFIG_PERCEPIO_TRC_CFG_STREAM_PORT_ZEPHYR_SEMIHOST=y
+
+Using menuconfig
+
+    General Architecture Options -> Semihosting support for Arm and RISC-V targets: Enabled    
+    Subsystems and OS Services -> Tracing Support: Enabled
+    Subsystems and OS Services -> Tracing Support -> Tracing Format: Percepio Tracealyer
+    Modules -> percepio -> TraceRecorder -> Recorder Start Mode: Start (tracing starts directly on startup)    
+    Modules -> percepio -> TraceRecorder -> Stream Port: Semihost    
+
+By default, the resulting trace file is found in "./trace.psf" in the root of the build folder, unless a different path is specified. Open this file in Tracealyzer by selecting File -> Open -> Open File.
+
 
 SEGGER SystemView Support
 =========================
