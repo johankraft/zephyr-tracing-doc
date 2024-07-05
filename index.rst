@@ -95,7 +95,7 @@ backends both in synchronous and asynchronous modes.
 Percepio Tracealyzer Support
 =========================
 
-Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace streaming over various interfaces. Apart from Zephyr kernel tracing, Tracealyzer also provides several features for application-level logging, used by calling the TraceRecorder APIs directly. This includes support for data plots, intervals and state diagrams, as described in the Tracealyzer User Manual provided with the application. 
+Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace streaming over various interfaces. Events from the Zephyr kernel are captured automatically and Tracealyzer also provides features for application-level logging, where you call the TraceRecorder API from your application code. That way you can see both kernel and application events together, both in the visual Trace View and in the textual Event Log. Learn more in the Tracealyzer User Manual provided with the application. Search for "user events". 
 
 .. _Percepio Tracealyzer: https://percepio.com/tracealyzer
 
@@ -105,6 +105,9 @@ Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace stre
     :figclass: align-center
     :width: 80%
 
+Stream Ports
+------------
+The tracing library for Tracealyzer has a concept of "stream ports", which define how to output the trace data.
 As of July 2024, the following "stream port" options are available in the Zephyr configuration system:
 
 * RTT: Trace streaming via Segger RTT on J-Link debug probes.
@@ -112,10 +115,12 @@ As of July 2024, the following "stream port" options are available in the Zephyr
 * Ring Buffer: The trace data is kept in a circular RAM buffer.
 * Semihost: For tracing on QEMU. Streams the trace data to a host file.
 
-Ring Buffer - Snapshot Tracing
-------------------------------
+The stream ports are simply headers file containin a few macros that define what functions to call to output the trace data stream and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport. Tracealyzer can receive such trace streams over various interfaces, including files, sockets, COM ports, named pipes and more.
 
-The "Ring Buffer" option is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This can be dumped via the debugger to see the traced events, e.g. the events leading up to a breakpoint. 
+Ring Buffer, for Snapshot Tracing
+---------------------------------
+
+The "Ring Buffer" stream port is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This can be dumped via the debugger to see the traced events, e.g. the events leading up to a breakpoint. 
 
 To use the Ring Buffer option, make sure to have the following configuration options in your prj.cnf::
 
