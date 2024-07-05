@@ -107,18 +107,17 @@ Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace stre
 
 Stream Ports
 ------------
-The tracing library for Tracealyzer has a concept of "stream ports", which define how to output the trace data.
-As of July 2024, the following "stream port" options are available in the Zephyr configuration system:
+The tracing library for Tracealyzer (TraceRecorder) has a concept of "stream ports", which define how to output the trace data. As of July 2024, the following stream port options are available in the Zephyr configuration system:
 
 * RTT: Trace streaming via Segger RTT on J-Link debug probes.
 * ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
 * Ring Buffer: The trace data is kept in a circular RAM buffer.
 * Semihost: For tracing on QEMU. Streams the trace data to a host file.
 
-The stream ports are simply headers file containin a few macros that define what functions to call to output the trace data stream and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport. Tracealyzer can receive such trace streams over various interfaces, including files, sockets, COM ports, named pipes and more.
+The stream ports are simply headers file containin a few macros that define what functions to call to output the trace data stream and (optionally) how to read start/stop commands fron Tracealyzer. It is fairly easy to make custom stream ports to implement your own data transport. Tracealyzer can receive such trace streams over various interfaces, including files, sockets, COM ports, named pipes and more. Additional stream port modules are available in the TraceRecorder repo (e.g. lwIP), although they might require modifications to work with Zephyr.
 
-Ring Buffer, for Snapshot Tracing
----------------------------------
+Ring Buffer for Snapshot Tracing
+--------------------------------
 
 The "Ring Buffer" stream port is often easiest to begin with. This keeps the trace data in a RAM buffer on the device. By default this is a circular buffer, meaning that it always contains the most recent data. This can be dumped via the debugger to see the traced events, e.g. the events leading up to a breakpoint. 
 
