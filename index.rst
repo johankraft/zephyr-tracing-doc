@@ -95,7 +95,7 @@ backends both in synchronous and asynchronous modes.
 Percepio Tracealyzer Support
 =========================
 
-Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace streaming over various interfaces. Events from the Zephyr kernel are captured automatically and Tracealyzer also provides features for application-level logging, where you call the TraceRecorder API from your application code. That way you can see both kernel and application events together, both in the visual Trace View and in the textual Event Log. Learn more in the Tracealyzer User Manual provided with the application. Search for "user events". 
+Zephyr includes support for `Percepio Tracealyzer`_ for trace streaming over various interfaces, as well as snapshot tracing where the events are kept in a RAM buffer. 
 
 .. _Percepio Tracealyzer: https://percepio.com/tracealyzer
 
@@ -105,9 +105,11 @@ Zephyr includes support for `Percepio Tracealyzer`_ for snapshots and trace stre
     :figclass: align-center
     :width: 80%
 
-Stream Ports
-------------
-The tracing library for Tracealyzer (TraceRecorder) has a concept of "stream ports", which define how to output the trace data. As of July 2024, the following stream port options are available in the Zephyr configuration system:
+Zephyr kernel events are captured automatically when Tracealyzer tracing is enabled. Tracealyzer also provides advanced application logging support, where you call the Tracealyzer tracing library from your application code. This lets you see both kernel and application events together and you may also visualize the application logging in several ways, for example as data plots and state diagrams. Learn in the Tracealyzer User Manual, provided with the application.
+
+TraceRecorder Stream Ports
+--------------------------
+The tracing library for Tracealyzer is called TraceRecorder and is included in the Zephyr manifest. This is enabled by configuration options, as described below. The most important configuration is to select the right "stream port", a TraceRecoder module that defines how to output the trace data. As of July 2024, the following stream ports are available in the Zephyr configuration system:
 
 * RTT: Trace streaming via Segger RTT on J-Link debug probes.
 * ITM: Trace streaming via the ITM function on Arm Cortex-M devices.
