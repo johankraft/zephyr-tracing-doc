@@ -162,7 +162,7 @@ The default buffer size is 10240 bytes. This can be reduced if you are tight on 
 
 To view the trace data, the easiest way is to start your debugger (west debug) and run the following GDB command::
 
-    dump binary value trace.psfs *RecorderDataPtr
+    dump binary value trace.bin *RecorderDataPtr
 
 The resulting file is typically found in the root of the build folder, unless a different path is specified. Open this file in Tracealyzer by selecting File -> Open -> Open File. 
 
